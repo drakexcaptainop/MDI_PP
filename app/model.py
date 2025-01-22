@@ -20,7 +20,7 @@ class LSAModel():
         X = self.vectorizer.fit_transform(text_data) 
         if self.num_components == 'auto':
             self.num_components = int(np.floor( np.sqrt( X.shape[0] ) ))
-        self.svd_fit = TruncatedSVD(n_components=self.num_components) 
+        self.svd_fit = TruncatedSVD(n_components=max(1, self.num_components)) 
         self.fitted_doc_matrix = self.svd_fit.fit_transform(X)
     
 
