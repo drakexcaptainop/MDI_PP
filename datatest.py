@@ -14,25 +14,21 @@ pname = data.name
 #exit()
 
 
-# Create a Pandas DataFrame
+
 df = pd.DataFrame(train_data)
 
-# Connect to an SQLite database (creates a new one if it doesn't exist)
 conn = sqlite3.connect("example.db")
 
 TABLE_NAME = 'products'
-# Create a table and dump the DataFrame data into the database
-df.to_sql(TABLE_NAME, conn, if_exists="replace", index=False)
 
-# Query the database to confirm data insertion
+df.to_sql(TABLE_NAME, conn, if_exists="replace", index=False)
 query = f"SELECT * FROM {TABLE_NAME}"
 result_df = pd.read_sql(query, conn)
 
-# Display the data from the database
-print("Data from the SQLite database:")
+
 print(result_df)
 
-# Close the database connection
+
 conn.close()
 
 
