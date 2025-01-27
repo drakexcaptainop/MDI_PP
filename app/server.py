@@ -1,6 +1,7 @@
 from app import *
-from http.server import BaseHTTPRequestHandler, HTTPServer
+
 from .data_cache import DataHandle
+
 
 class ServerHandler(BaseHTTPRequestHandler):
     post_data_scheme = ['table_name', 'uid', 'column_name', 'data']

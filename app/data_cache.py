@@ -1,8 +1,7 @@
 from app import *
 
-
 class DataHandle:
-    instance : 'DataHandle' = None
+    instance : 'DataHandle' 
     datastores : dict[str, 'TableDataStore'] = {}
     def __init__(self):
         pass
@@ -32,7 +31,7 @@ class DataHandle:
         ds = self.datastores.get( table_name, None )
         if  ds is None:
             return None 
-        if not ds.is_model_fitted():
+        if not ds.is_model_fitted(): #RED
             ds.fit_data_model(  )
         rdata = ds.rank_query( query=query, numpy=res_fmt=='numpy', _list=res_fmt=='list' )
         N = len(rdata)
@@ -50,17 +49,16 @@ class DataHandle:
     def fit_table_store(self, table_name):
         ds = self.get_table_store( table_name=table_name ) 
         ds.fit_data_model(  )   
-        return True 
+        return True #RED
     
     def __str__(self):
-        return '<empty>'
+        return '<empty>' #SHOW ds NAMES
     def __new__(cls):
-        if cls.instance is None:
-            cls.instance = super().__new__( cls )
-        return cls.instance
+        return quicksingleton( cls )
     
 
 class TableDataStore:
+    UID_COL_NAME: str = 'uid'
     columns: pd.DataFrame
     uid: pd.DataFrame
     model: LSAModel
@@ -87,7 +85,7 @@ class TableDataStore:
             print("data must be inserted first")
             raise Exception()
         uids = json.loads( raw_uids )
-        self.uid[ column_name ] = uids 
+        self.uid[ self.UID_COL_NAME ] = uids 
 
     def append_raw_data_column(self, column_name, raw_data):
         data_array = json.loads( raw_data )

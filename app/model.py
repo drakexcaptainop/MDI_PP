@@ -3,7 +3,6 @@ from app import *
 
 def dummy():
     query = "4K LED Croma"
-    pass
 
 class LSAModel():
     fitted: bool = False
