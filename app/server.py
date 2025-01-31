@@ -62,13 +62,23 @@ class ServerHandler(BaseHTTPRequestHandler):
             else:
                 self.end_response_and_headers( msg=F'no table name {table_name}' )
             pass
-            
+        elif path == 'dummy':
+            self.end_response_and_headers()
+            self.dummy_data_test()
 
     
     def end_response_and_headers(self, code=200, msg=''):
         self.send_response( code=code, message=msg )
+        self.send_header('Access-Control-Allow-Origin', '*')  # Allow all origins
         self.end_headers(  )
         
+    def dummy_data_test(self):
+        conn = sqlite3.connect("example.db")
+        res = conn.execute( f'select * from products' )
+        rows = []
+        while not( (row:=res.fetchone()) is None ):
+            rows.append( row[0] )
+        self.wfile.write(json.dumps( rows ).encode())
 
     def get_path(self):
         return parse.urlparse( self.stripped_path(  ) ).path
@@ -113,7 +123,7 @@ class ServerHandler(BaseHTTPRequestHandler):
     
 
 def run(handler_class=ServerHandler, port=8004):
-    server_address = ('', port)
+    server_address = ('0.0.0.0', port)
     httpd = HTTPServer(server_address, handler_class)
     print(f'Starting server on port {port}...')
     httpd.serve_forever()

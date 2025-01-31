@@ -9,3 +9,6 @@ from .model import LSAModel
 import urllib.parse as parse
 from .singleton import quicksingleton
 
+
+#only  for test
+import sqlite3
