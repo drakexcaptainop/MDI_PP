@@ -10,7 +10,6 @@ class ServerHandler(BaseHTTPRequestHandler):
         request_query_map = self.get_url_query_map(  )
         path = self.get_path(  )
 
-
         if path == 'data':
             column = request_query_map['column'][0]
             table = request_query_map['table'][0]
@@ -24,22 +23,37 @@ class ServerHandler(BaseHTTPRequestHandler):
         # /train?table=name        
         elif path == 'train':
             table_name,= request_query_map['table']
+            ncomps,= request_query_map.get('nc', ('auto', ))
+            if ncomps != 'auto':
+                ncomps = int(ncomps)
             if self.data_handle.has_table( table_name=table_name ):
-                self.data_handle.fit_table_store( table_name=table_name )
+                self.data_handle.fit_table_store( table_name=table_name, n_components=ncomps )
+
                 self.end_response_and_headers(  )
             else:
                 self.end_response_and_headers(msg=F'no table with name {table_name}!')
         elif path == 'query':
             table_name ,= request_query_map['table']
             query_str ,= request_query_map['q']
+            nresults, = request_query_map.get('nresults', (5, ))
+            columns, = request_query_map.get('columns', (None, ))
+            if not(columns is None):
+                columns = [*map( lambda a:a.strip(' '), columns.split(',') )]
+                
+            print(f'{columns = }')
+            nresults = int(nresults)
+
             if self.data_handle.has_table( table_name=table_name ):
                 if self.data_handle.is_table_store_fitted( table_name=table_name ):
-                    str_results = self.data_handle.query_table_store( query=query_str, table_name=table_name )
+                    uid_results, str_results = self.data_handle.query_table_store( query=query_str, 
+                                                                                  table_name=table_name, first=nresults,
+                                                                                   columns=columns )
                     self.end_response_and_headers()
                     self.wfile.write( 
                         json.dumps(
                             {
-                                'str_results': str_results
+                                'text_results': str_results,
+                                'uid_results': uid_results
                             }
                         ).encode()
                     )

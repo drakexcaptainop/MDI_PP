@@ -24,19 +24,21 @@ class DataHandle:
             ds = TableDataStore( table_name=table_name )
             self.datastores[ table_name ] = ds 
         ds.append_data_column( column_name=column_name, data=data )
-        ds.set_column_uids( column_name=column_name, uids=uid ) 
+        if not(uid is None):
+            ds.set_column_uids( uids=uid ) 
         return ds 
     
-    def query_table_store( self, query: str, table_name: str, first=5, res_fmt: str = 'list' ):
+    def query_table_store( self, query: str, table_name: str, first=5, res_fmt: str = 'list', columns=None ):
         ds = self.datastores.get( table_name, None )
         if  ds is None:
             return None 
         if not ds.is_model_fitted(): #RED
             ds.fit_data_model(  )
-        rdata = ds.rank_query( query=query, numpy=res_fmt=='numpy', _list=res_fmt=='list' )
+        uids, rdata = ds.rank_query( query=query, numpy=res_fmt=='numpy', _list=res_fmt=='list', columns=columns )
         N = len(rdata)
+        print(f'{N = }, {first = }')
         nresults = min( N, first )
-        return rdata[:nresults]
+        return uids and uids[:nresults], rdata[:nresults]
     
     def is_table_store_fitted(self, table_name: str):
         return self.get_table_store( table_name=table_name ).is_model_fitted()
@@ -46,9 +48,9 @@ class DataHandle:
     def get_table_store(self, table_name):
         return self.datastores.get( table_name, None )
     
-    def fit_table_store(self, table_name):
+    def fit_table_store(self, table_name, n_components):
         ds = self.get_table_store( table_name=table_name ) 
-        ds.fit_data_model(  )   
+        ds.fit_data_model( n_components=n_components )   
         return True #RED
     
     def __str__(self):
@@ -74,8 +76,9 @@ class TableDataStore:
         print(self.columns[ column_name ])
 
     
-    def set_column_uids(self, column_name, uids):
-        self.uid[ column_name ] = uids
+    def set_column_uids(self, uids):
+        self.uid[ self.UID_COL_NAME ] = uids
+        print(self.uid)
 
     def is_model_fitted(self):
         return self.data_model.fitted
@@ -93,16 +96,17 @@ class TableDataStore:
             raise Exception( f"Invalid Type expected: {'list'}, got {type(data_array)}" )
         self.columns[ column_name ] = data_array
     
-    def fit_data_model(self, columns: (str | list[str] ) ='all'):
+    def fit_data_model(self, columns: (str | list[str] ) ='all', n_components='auto'):
         if isinstance( columns, list ):
             raise NotImplementedError()
         if columns == 'all':
             text_data = self.columns.apply( lambda row: ', '.join(row.values.astype(str)), axis=1 ) 
         elif columns == 'first':
             raise NotImplementedError()
+        self.data_model.num_components = n_components
         self.data_model.fit( text_data.to_numpy() )
 
-    def rank_query(self, query: str, numpy=False, _list=False):
+    def rank_query(self, query: str, numpy=False, _list=False, columns=None):
         if not self.is_model_fitted(  ):
             raise Exception( "Model be fitted first" )
         ranks = self.data_model.rank_query( [ query ] )
@@ -110,8 +114,15 @@ class TableDataStore:
         if numpy:
             return self.columns.iloc[ ranks, : ].values
         elif _list == True:
-            print('returning list', self.columns.iloc[ ranks, : ].values.flatten().tolist())
-            return self.columns.iloc[ ranks, : ].values.flatten().tolist()
+            uids = None
+            if len(self.uid.columns)==1:
+                uids =  self.uid.iloc[ranks, :].values.flatten().tolist()
+            if not(columns is None):
+                print('not none', columns)
+                cols = self.columns[columns].iloc[ ranks, : ].values.tolist() 
+            else:
+                cols = self.columns.iloc[ ranks, : ].values.flatten().tolist()
+            return uids, cols
         else:
             return self.columns.iloc[ ranks, : ].to_list()
 

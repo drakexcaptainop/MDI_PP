@@ -7,9 +7,10 @@ import sqlite3
 import time
 import pandas as pd
 data = pd.read_csv('/Users/jorgebarahona/Downloads/croma_products_final.csv').dropna()
-train_data = (data.name)
+print(data.columns)
+
+train_data = (data[['name', 'overview']])
 #
-pname = data.name
 #print(data.category.unique())
 #exit()
 
@@ -24,15 +25,7 @@ TABLE_NAME = 'products'
 # Create a table and dump the DataFrame data into the database
 df.to_sql(TABLE_NAME, conn, if_exists="replace", index=False)
 
-# Query the database to confirm data insertion
-query = f"SELECT * FROM {TABLE_NAME}"
-result_df = pd.read_sql(query, conn)
 
-# Display the data from the database
-print("Data from the SQLite database:")
-print(result_df)
-
-# Close the database connection
 conn.close()
 
 
