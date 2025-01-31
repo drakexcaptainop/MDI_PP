@@ -4,14 +4,13 @@ export default function Table( { data } ){
     return <table className="table table-dark table-borderless">
         <thead>
             <tr>
-                { keys.map( (v, i) => <th key={i}> {v} </th>) }
+                <th>Producto</th>
             </tr>
         </thead>
         <tbody>
             { data.map( (v, i) => {
                 return <tr> 
-                    <th> { v.id } </th>  
-                    <th> { v.name } </th>  
+                    <th> { v } </th>  
                 </tr>
             } ) }
         </tbody>
